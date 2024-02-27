@@ -1,9 +1,28 @@
 from urllib.request import Request, urlopen
+import fitz  # PyMuPDF
 from datetime import datetime
 from PyPDF2 import PdfReader
 import requests
 import pdfplumber
 import io
+#######################################################
+#from io import BytesIO
+
+#######################################################
+
+hoje = datetime.now()
+global url_cad01
+url_cad01 = (
+            f"https://www.imprensaoficial.com.br/downloads/pdf/edicao/{hoje:%Y%m%d}EXEC1.pdf"
+        )
+global url_cad02
+url_cad02 = (
+            f"https://www.imprensaoficial.com.br/downloads/pdf/edicao/{hoje:%Y%m%d}EXEC2.pdf"
+        )
+global url_cad03
+url_cad03 = (
+            f"https://www.imprensaoficial.com.br/downloads/pdf/edicao/{hoje:%Y%m%d}EXEC3.pdf"
+        )
 
 def pagina(string):
     numero_atual = ""
@@ -22,13 +41,7 @@ def pagina(string):
     return int(numero_atual) if numero_atual else None
 def indice():
 ##################################Construindo a url do dia###################################
-    hoje = datetime.now()
-    url_cad01 = (
-            f"https://www.imprensaoficial.com.br/downloads/pdf/edicao/{hoje:%Y%m%d}EXEC1.pdf"
-        )
-    url_cad02 = (
-            f"https://www.imprensaoficial.com.br/downloads/pdf/edicao/{hoje:%Y%m%d}EXEC2.pdf"
-        )
+    
 ################ Carregando o Índice Caderno 01 ################################################
     buffer_cad01 = io.BytesIO(urlopen(Request(url_cad01)).read())
     reader_cad01 = PdfReader(buffer_cad01)
@@ -65,8 +78,8 @@ def indice():
     except IndexError: 
             cad01_inicio_crh = None
             cad01_fim_crh = None
-######################Localizando onde acaba a CRH no sumário#########################################
-################ Carregando o Índice Caderno 02 ################################################
+##################Localizando onde acaba a CRH no sumário ############################################
+###################### Carregando o Índice Caderno 02 ################################################
     buffer_cad02 = io.BytesIO(urlopen(Request(url_cad02)).read())
     reader_cad02 = PdfReader(buffer_cad02)
     atos_cad02 = reader_cad02.pages[0]
@@ -129,17 +142,10 @@ def resumo_indice():
     print(f"Onde a Secretaria da Saúde se encontra da página {indice()['cad02_inicio_saude']} até a página {indice()['cad02_fim_saude']}.")
     print(f"A Coordenadoria de Recursos Humanos se encontra da página {indice()['cad02_inicio_crh']} até a página {indice()['cad02_fim_crh']} do caderno de atos de pessoal.") if (str(indice()['cad02_inicio_crh'])).isdigit() else print("Não encontrei a CRH no Caderno de atos de pessoal Hoje.")
     
-    
-    
-    
+###############################
 
-
-import fitz  # PyMuPDF
-import requests
-from io import BytesIO
-
-def mapear_areas_pdf(pdf_file, start_page=0, end_page=None):
-    doc = fitz.open(pdf_file)
+def mapear_areas_pdf(pdf_content, start_page=0, end_page=None):
+    doc = fitz.open("pdf", pdf_content)
     if end_page is None:
         end_page = len(doc)
     paginas = []
@@ -163,16 +169,9 @@ def mapear_areas_pdf(pdf_file, start_page=0, end_page=None):
     doc.close()
     return paginas
 
-# Baixar o PDF da URL
 def download_pdf_from_url(url):
     response = requests.get(url)
-    return BytesIO(response.content)
+    return bytes(response.content)
 
-url = "http://www.example.com/seu_arquivo.pdf"  # URL do seu arquivo PDF
 
-# Definir os parâmetros de intervalo de página
-start_page = 0  # Página inicial (0-indexed)
-end_page = 5  # Página final (exclusiva)
-
-pdf_file = download_pdf_from_url(url)
-
+# Especificar a URL e o intervalo de páginas desejado
